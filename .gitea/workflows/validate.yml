@@ -98,18 +98,6 @@ jobs:
           SUBCULT_VISUAL_RESULTS: test-results/visual-regression
         run: ./tests/visual-regression.py --self-test
 
-      - name: Retain clean-user results
-        if: always()
-        # Gitea's artifact endpoint uses the v3 protocol. GitHub's v4 action
-        # rejects this runner as GHES before the integrity checks can run.
-        uses: actions/upload-artifact@v3
-        with:
-          name: validation-results
-          path: |
-            test-results/*.json
-            test-results/visual-regression/
-          if-no-files-found: error
-
       - name: Run SUBCULT integrity checks
         env:
           SUBCULT_SOURCE_ONLY: "1"
@@ -121,3 +109,16 @@ jobs:
 
       - name: Test transactional installer
         run: ./tests/installer.sh
+
+      - name: Retain validation results
+        if: always()
+        # Reports are diagnostic; their transport must not block validation.
+        uses: https://gitea.com/actions/upload-artifact@c24449f33cd45d4826c6702db7e49f7cdb9b551d
+        timeout-minutes: 2
+        continue-on-error: true
+        with:
+          name: validation-results
+          path: |
+            test-results/*.json
+            test-results/visual-regression/
+          if-no-files-found: error
